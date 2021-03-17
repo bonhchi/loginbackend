@@ -8,7 +8,6 @@ namespace LoginProject.Model
     public class UserData
     {
         public List<User> Users { get; set; }
-
         public static UserData InitData()
         {
             List<User> users = new List<User>();

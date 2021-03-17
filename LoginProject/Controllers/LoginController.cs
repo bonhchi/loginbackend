@@ -1,56 +1,53 @@
 ﻿using LoginProject.Model;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace LoginProject.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class LoginController : Controller
+    [EnableCors("CorsPolicy")]
+    public class LoginController : ControllerBase
     {
         private readonly UserData _userData;
-        private readonly SignInManager<User> _signInManager;
 
-        public LoginController(UserData userData, SignInManager<User> signInManager)
+        public LoginController(UserData userData)
         {
             _userData = userData;
-            _signInManager = signInManager;
         }
 
-        [HttpGet]
-        public IActionResult Login()
-        {
-            List<User> user = _userData.Users; 
-            return View(user);
-        }
+        [HttpPost, Route("login")]
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(User user)
+        public IActionResult Login([FromBody]User user)
         {
-            if (!ModelState.IsValid)
+            if(user == null)
             {
-                return View(user);
+                return BadRequest("Invalid client request");
             }
-            var result = await _signInManager.PasswordSignInAsync(user, user.Password, false, false);
-            if (result.Succeeded)
+            if (user.Username == "abc" && user.Password == "12345")
             {
-                return RedirectToAction();
+                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345"));
+                var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+                var tokenOptions = new JwtSecurityToken(
+                    issuer: "http://localhost:5000",
+                    audience: "http://localhost:5000",
+                    claims: new List<Claim>(),
+                    expires: DateTime.Now.AddMinutes(3),
+                    signingCredentials: signinCredentials
+                    );
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+                return Ok(new { Token = "Login done" });
             }
-            else
-            {
-                ModelState.AddModelError("", "Username hoặc mật khẩu sai");
-                return View();
-            }
-        }
-        [HttpGet]
-        public IActionResult Index()
-        {
-            return View();
+            return Unauthorized();
         }
     }
 }

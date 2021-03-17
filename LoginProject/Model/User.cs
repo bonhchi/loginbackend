@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LoginProject.Model
 {
-    public class User : IdentityUser
+    public class User
     {
         public string Username { get; set; }
         public string Password { get; set; }
