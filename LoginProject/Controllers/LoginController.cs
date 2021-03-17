@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace LoginProject.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/auth")]
     [EnableCors("CorsPolicy")]
     public class LoginController : ControllerBase
     {
@@ -24,29 +24,19 @@ namespace LoginProject.Controllers
         {
             _userData = userData;
         }
-
+        //[HttpGet]
+        //public string LoginString()
+        //{
+        //    return "abc";
+        //}
         [HttpPost, Route("login")]
-
-        public IActionResult Login([FromBody]User user)
+        public IActionResult Login([FromBody] User user)
         {
-            if(user == null)
-            {
+            if (user == null)
                 return BadRequest("Invalid client request");
-            }
-            if (user.Username == "abc" && user.Password == "12345")
-            {
-                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345"));
-                var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-                var tokenOptions = new JwtSecurityToken(
-                    issuer: "http://localhost:5000",
-                    audience: "http://localhost:5000",
-                    claims: new List<Claim>(),
-                    expires: DateTime.Now.AddMinutes(3),
-                    signingCredentials: signinCredentials
-                    );
-                var tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+            bool existUser = _userData.Users.Exists(p => p.Username == user.Username && p.Password == user.Password);
+            if (existUser)
                 return Ok(new { Token = "Login done" });
-            }
             return Unauthorized();
         }
     }
