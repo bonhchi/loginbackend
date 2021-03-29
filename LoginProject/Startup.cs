@@ -1,5 +1,4 @@
 using LoginProject.Model;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -16,6 +15,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
+using AutoMapper;
+using Domain;
+using Service.Users;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoginProject
 {
@@ -33,19 +36,18 @@ namespace LoginProject
         {
             services.AddCors(options =>
             {
-                //options.AddPolicy("CorsPolicy", 
-                //    builder => builder.AllowAnyOrigin()
-                //    .AllowAnyHeader()
-                //    .AllowAnyMethod()
-                //    );
                 options.AddPolicy("CorsPolicy", builder => builder.WithOrigins("http://localhost:4200")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials()
                     .SetIsOriginAllowed((host) => true));
             });
-            services.AddSingleton(provider => UserData.InitData());
             services.AddControllers();
+            var mapperConfig = new MapperConfiguration(t => t.AddProfile(new AutoMapperProfile()));
+            IMapper mapper = mapperConfig.CreateMapper();
+            services.AddScoped<IUserService,UserService>();
+            services.AddDbContext<ShopDbContext>(options =>
+          options.UseSqlServer(Configuration.GetConnectionString("ShopDbContext"), b => b.MigrationsAssembly("Domain")));
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
